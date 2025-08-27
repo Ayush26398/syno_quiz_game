@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/quiz_state.dart';
-import '../services/data_service.dart';
+import '../models/enhanced_quiz_state.dart'; // Use enhanced state model
+import '../models/spaced_word_pair.dart';  // Word pair model
 
 class AddWordsScreen extends StatefulWidget {
   const AddWordsScreen({Key? key}) : super(key: key);
@@ -11,56 +11,51 @@ class AddWordsScreen extends StatefulWidget {
 }
 
 class _AddWordsScreenState extends State<AddWordsScreen> {
-  final TextEditingController _csvController = TextEditingController();
-  bool _isLoading = false;
+  final _wordController = TextEditingController();
+  final _synonymController = TextEditingController();
+  bool _adding = false;
+  String? _error;
 
   @override
   void dispose() {
-    _csvController.dispose();
+    _wordController.dispose();
+    _synonymController.dispose();
     super.dispose();
   }
 
-  Future<void> _addWords() async {
-    if (_csvController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter word pairs')),
-      );
+  Future<void> _addWord() async {
+    final word = _wordController.text.trim();
+    final synonym = _synonymController.text.trim();
+
+    if (word.isEmpty || synonym.isEmpty) {
+      setState(() {
+        _error = "Both word and synonym are required.";
+      });
       return;
     }
 
     setState(() {
-      _isLoading = true;
+      _adding = true;
+      _error = null;
     });
 
     try {
-      final newWords = DataService.parseCSV(_csvController.text);
+      final newCard = SpacedWordPair(word: word, synonym: synonym);
+      await context.read<EnhancedQuizState>().addCards([newCard]);
 
-      if (newWords.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No valid word pairs found')),
-        );
-        return;
-      }
-
-      await DataService.addWords(newWords);
-
-      // Update quiz state
-      final quizState = Provider.of<QuizState>(context, listen: false);
-      final allWords = await DataService.loadWords();
-      quizState.setAllWords(allWords);
+      _wordController.clear();
+      _synonymController.clear();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Added ${newWords.length} word pairs successfully')),
+        SnackBar(content: Text('Word "$word" added successfully!')),
       );
-
-      _csvController.clear();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error adding words: $e')),
-      );
+      setState(() {
+        _error = 'Error adding word: $e';
+      });
     } finally {
       setState(() {
-        _isLoading = false;
+        _adding = false;
       });
     }
   }
@@ -69,86 +64,42 @@ class _AddWordsScreenState extends State<AddWordsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('➕ Add Words'),
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
+        title: const Text('Add Words'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Enter word pairs in CSV format (word,synonym):',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Example:\nhappy,joyful\nfast,quick\nbig,large',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontFamily: 'monospace',
-                      ),
-                    ),
-                  ],
-                ),
+            TextField(
+              controller: _wordController,
+              decoration: const InputDecoration(
+                labelText: 'Word',
+                border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: TextField(
-                controller: _csvController,
-                maxLines: null,
-                expands: true,
-                decoration: const InputDecoration(
-                  hintText: 'happy,joyful\nfast,quick\nbig,large',
-                  border: OutlineInputBorder(),
-                  alignLabelWithHint: true,
-                ),
-                textAlignVertical: TextAlignVertical.top,
+            const SizedBox(height: 12),
+            TextField(
+              controller: _synonymController,
+              decoration: const InputDecoration(
+                labelText: 'Synonym',
+                border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _addWords,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                        : const Text('Add Words'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                ElevatedButton(
-                  onPressed: () {
-                    _csvController.clear();
-                  },
-                  child: const Text('Clear'),
-                ),
-              ],
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _adding ? null : _addWord,
+              child: _adding
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text('Add Word'),
             ),
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Text(
+                  _error!,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
           ],
         ),
       ),

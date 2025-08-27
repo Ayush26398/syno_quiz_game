@@ -1,8 +1,9 @@
 
 import 'package:flutter/material.dart';
+import '../services/sr_service.dart';
 import 'package:provider/provider.dart';
 import '../models/enhanced_quiz_state.dart';
-import '../models/spaced_word_pair.dart';
+// import '../models/spaced_word_pair.dart'; // unused
 
 
 class EnhancedHomeScreen extends StatefulWidget {
@@ -241,20 +242,32 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen>
             const SizedBox(height: 16),
 
             // Progress bars for different card types
-            _buildProgressRow('Due Cards Completed', 0.7, Colors.green),
+            _buildProgressRow('Due Cards Completed', 
+                stats.dueToday > 0 ? (stats.dueToday - stats.overdueCards) / stats.dueToday : 0.0, 
+                Colors.green),
             const SizedBox(height: 8),
-            _buildProgressRow('New Cards Learned', 0.4, Colors.blue),
+            _buildProgressRow('New Cards Learned', 
+                stats.newCards > 0 ? (stats.newCards - stats.learningCards) / stats.newCards : 0.0, 
+                Colors.blue),
             const SizedBox(height: 8),
-            _buildProgressRow('Overall Study Goal', 0.6, Colors.purple),
+            _buildProgressRow('Overall Study Goal', 
+                (stats.reviewCards + stats.learningCards) / stats.totalCards, 
+                Colors.purple),
 
             const SizedBox(height: 16),
 
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildTodayStatChip('Study Time', '23m', Icons.access_time),
-                _buildTodayStatChip('Cards Studied', '47', Icons.library_books),
-                _buildTodayStatChip('Accuracy', '89%', Icons.target),
+                _buildTodayStatChip('Study Time', 
+                    _formatStudyTime(quizState.totalStudyTime), 
+                    Icons.access_time),
+                _buildTodayStatChip('Cards Studied', 
+                    '${quizState.totalAnswers}', 
+                    Icons.library_books),
+                _buildTodayStatChip('Accuracy', 
+                    '${quizState.accuracy.toStringAsFixed(0)}%', 
+                    Icons.track_changes),
               ],
             ),
           ],
@@ -725,5 +738,15 @@ class _EnhancedHomeScreenState extends State<EnhancedHomeScreen>
         content: Text('Export feature coming soon!'),
       ),
     );
+  }
+
+  String _formatStudyTime(Duration duration) {
+    if (duration.inHours > 0) {
+      return '${duration.inHours}h ${duration.inMinutes.remainder(60)}m';
+    } else if (duration.inMinutes > 0) {
+      return '${duration.inMinutes}m ${duration.inSeconds.remainder(60)}s';
+    } else {
+      return '${duration.inSeconds}s';
+    }
   }
 }

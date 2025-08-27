@@ -204,42 +204,50 @@ class _EnhancedQuizScreenState extends State<EnhancedQuizScreen>
           }
 
           return SafeArea(
-            child: Padding(
+              child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  // Enhanced Progress Section
-                  _buildEnhancedProgressSection(quizState),
-                  const SizedBox(height: 16),
-
-                  // Memory Information Card
-                  _buildMemoryInfoCard(quizState.currentWord!),
-                  const SizedBox(height: 16),
-
-                  // Main Question Card
-                  Expanded(
-                    flex: 2,
-                    child: _buildQuestionCard(quizState),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Feedback Section
-                  if (quizState.hasAnswered) ...[
-                    _buildFeedbackSection(quizState),
-                    const SizedBox(height: 16),
-                  ],
-
-                  // Options Section
-                  Expanded(
-                    flex: 3,
-                    child: _buildOptionsSection(quizState),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Action Button
-                  _buildActionButton(quizState),
-                ],
+                        child: Column(
+            children: [
+              // Enhanced Progress Section
+              Flexible(
+                flex: 1,
+                child: _buildEnhancedProgressSection(quizState),
               ),
+              const SizedBox(height: 4), // Reduced spacing
+
+              // Memory Information Card
+              Flexible(
+                flex: 1,
+                child: _buildMemoryInfoCard(quizState.currentWord!),
+              ),
+              const SizedBox(height: 4), // Reduced spacing
+
+              // Main Question Card
+              Flexible(
+                flex: 1, // Reduced flex from 2 to 1
+                child: _buildQuestionCard(quizState),
+              ),
+              const SizedBox(height: 4), // Reduced spacing
+
+              // Feedback Section
+              if (quizState.hasAnswered) ...[
+                Flexible(
+                  flex: 1,
+                  child: _buildFeedbackSection(quizState),
+                ),
+                const SizedBox(height: 4), // Reduced spacing
+              ],
+
+              // Options Section
+              Expanded(
+                child: _buildOptionsSection(quizState),
+              ),
+              const SizedBox(height: 8), // Increased spacing before button
+
+              // Action Button
+              _buildActionButton(quizState),
+            ],
+          ),
             ),
           );
         },
@@ -250,8 +258,9 @@ class _EnhancedQuizScreenState extends State<EnhancedQuizScreen>
   Widget _buildEnhancedProgressSection(EnhancedQuizState quizState) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12), // Reduced padding
         child: Column(
+          mainAxisSize: MainAxisSize.min, // Take minimum space
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -259,7 +268,7 @@ class _EnhancedQuizScreenState extends State<EnhancedQuizScreen>
                 Text(
                   'Question ${quizState.currentIndex + 1} of ${quizState.currentQuiz.length}',
                   style: const TextStyle(
-                    fontSize: 16,
+                    fontSize: 14, // Smaller font
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -268,17 +277,18 @@ class _EnhancedQuizScreenState extends State<EnhancedQuizScreen>
                   style: TextStyle(
                     color: _getAccuracyColor(quizState.accuracy),
                     fontWeight: FontWeight.bold,
+                    fontSize: 14, // Smaller font
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6), // Reduced spacing
             EnhancedProgressBar(
               progress: quizState.progress,
               correctAnswers: quizState.correctAnswers,
               totalAnswers: quizState.totalAnswers,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6), // Reduced spacing
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -286,12 +296,12 @@ class _EnhancedQuizScreenState extends State<EnhancedQuizScreen>
                   'Response Time: ${(_responseTimeMs / 1000).toStringAsFixed(1)}s',
                   style: TextStyle(
                     color: _getResponseTimeColor(_responseTimeMs),
-                    fontSize: 12,
+                    fontSize: 11, // Smaller font
                   ),
                 ),
                 Text(
                   'Study Time: ${_formatDuration(quizState.totalStudyTime)}',
-                  style: const TextStyle(fontSize: 12),
+                  style: const TextStyle(fontSize: 11), // Smaller font
                 ),
               ],
             ),
@@ -305,8 +315,9 @@ class _EnhancedQuizScreenState extends State<EnhancedQuizScreen>
     return Card(
       color: Colors.blue.shade50,
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(8), // Reduced padding
         child: Column(
+          mainAxisSize: MainAxisSize.min, // Take minimum space
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -328,7 +339,7 @@ class _EnhancedQuizScreenState extends State<EnhancedQuizScreen>
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6), // Reduced spacing
             MemoryStrengthIndicator(
               retrievability: card.getRetrievability(),
               stability: card.stability,
@@ -346,6 +357,7 @@ class _EnhancedQuizScreenState extends State<EnhancedQuizScreen>
         elevation: 8,
         child: Container(
           width: double.infinity,
+          constraints: const BoxConstraints(maxHeight: 200), // Limit height
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             gradient: LinearGradient(
@@ -358,32 +370,37 @@ class _EnhancedQuizScreenState extends State<EnhancedQuizScreen>
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(16), // Reduced padding
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min, // Take minimum space needed
               children: [
                 const Text(
                   'Find the synonym for:',
                   style: TextStyle(
                     color: Colors.white70,
-                    fontSize: 16,
+                    fontSize: 14, // Smaller font
                   ),
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  quizState.currentWord!.word.toUpperCase(),
-                  style: const TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: 2,
+                const SizedBox(height: 8), // Reduced spacing
+                Flexible(
+                  child: Text(
+                    quizState.currentWord!.word.toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 28, // Smaller font size
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 1, // Reduced letter spacing
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2, // Limit to 2 lines
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  textAlign: TextAlign.center,
                 ),
                 if (_showHint) ...[
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8), // Reduced spacing
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(8), // Reduced padding
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(8),
@@ -392,7 +409,7 @@ class _EnhancedQuizScreenState extends State<EnhancedQuizScreen>
                       'Hint: Starts with "${quizState.currentWord!.synonym[0].toUpperCase()}"',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 14,
+                        fontSize: 12, // Smaller font
                       ),
                     ),
                   ),
@@ -410,7 +427,7 @@ class _EnhancedQuizScreenState extends State<EnhancedQuizScreen>
       scale: _feedbackAnimation,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12), // Reduced padding
         decoration: BoxDecoration(
           color: quizState.isCorrect ? Colors.green.shade100 : Colors.red.shade100,
           borderRadius: BorderRadius.circular(8),
@@ -420,20 +437,21 @@ class _EnhancedQuizScreenState extends State<EnhancedQuizScreen>
           ),
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min, // Take minimum space
           children: [
             Row(
               children: [
                 Icon(
                   quizState.isCorrect ? Icons.check_circle : Icons.cancel,
                   color: quizState.isCorrect ? Colors.green : Colors.red,
-                  size: 24,
+                  size: 20, // Smaller icon
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     quizState.statusMessage,
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 14, // Smaller font
                       fontWeight: FontWeight.w500,
                       color: quizState.isCorrect ? Colors.green.shade800 : Colors.red.shade800,
                     ),
@@ -442,7 +460,7 @@ class _EnhancedQuizScreenState extends State<EnhancedQuizScreen>
               ],
             ),
             if (!quizState.isCorrect) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 6), // Reduced spacing
               _buildGradeButtons(quizState),
             ],
           ],
@@ -466,15 +484,18 @@ class _EnhancedQuizScreenState extends State<EnhancedQuizScreen>
   Widget _buildGradeButton(String label, Color color, ReviewGrade grade) {
     return ElevatedButton(
       onPressed: () {
-        // This would allow manual grading for failed cards
+        // Allow manual grading for failed cards
         final quizState = Provider.of<EnhancedQuizState>(context, listen: false);
-        // Implementation for manual grading
+        // Update the card with the selected grade
+        quizState.updateCardGrade(grade);
+        // Move to next question
+        _nextQuestion();
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
         foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        minimumSize: const Size(60, 30),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), // More compact
+        minimumSize: const Size(50, 24), // Smaller size
       ),
       child: Text(label, style: const TextStyle(fontSize: 12)),
     );
@@ -486,6 +507,7 @@ class _EnhancedQuizScreenState extends State<EnhancedQuizScreen>
       crossAxisSpacing: 12,
       mainAxisSpacing: 12,
       childAspectRatio: 2.5,
+      shrinkWrap: false, // Let it expand naturally
       children: _options.map((option) {
         final isSelected = _selectedAnswer == option;
         final isCorrect = quizState.hasAnswered &&
@@ -518,7 +540,7 @@ class _EnhancedQuizScreenState extends State<EnhancedQuizScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.grey.shade600,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: 12), // More compact
               ),
             ),
           ),
@@ -533,7 +555,7 @@ class _EnhancedQuizScreenState extends State<EnhancedQuizScreen>
         style: ElevatedButton.styleFrom(
           backgroundColor: Theme.of(context).primaryColor,
           foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 12), // More compact
           textStyle: const TextStyle(fontSize: 16),
         ),
         child: Text(
@@ -628,7 +650,7 @@ class _ResultsDialog extends StatelessWidget {
               Icon(
                 accuracy >= 85 ? Icons.emoji_events :
                 accuracy >= 70 ? Icons.thumb_up : Icons.school,
-                color: accuracy >= 85 ? Colors.gold :
+                color: accuracy >= 85 ? Colors.amber :
                 accuracy >= 70 ? Colors.green : Colors.orange,
               ),
               const SizedBox(width: 8),

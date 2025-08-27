@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../models/enhanced_quiz_state.dart';
-import '../models/spaced_word_pair.dart';
+import '../services/sr_service.dart';
+// import '../models/spaced_word_pair.dart'; // unused
 
 class EnhancedStatsScreen extends StatefulWidget {
   const EnhancedStatsScreen({Key? key}) : super(key: key);
@@ -235,7 +236,7 @@ class _EnhancedStatsScreenState extends State<EnhancedStatsScreen>
               Expanded(child: _buildStatCard(
                 'Recent Accuracy',
                 '${(analytics['recentAccuracy'] * 100).toStringAsFixed(1)}%',
-                Icons.target,
+                Icons.track_changes,
                 _getAccuracyColor(analytics['recentAccuracy']),
               )),
               const SizedBox(width: 12),
@@ -570,7 +571,7 @@ class _EnhancedStatsScreenState extends State<EnhancedStatsScreen>
       return const Center(child: Text('No maturity data available'));
     }
 
-    final barGroups = maturityData.entries.asMap().entries.map((entry) {
+    final barGroups = maturityData.entries.toList().asMap().entries.map((entry) {
       final colors = {
         'Young': Colors.red,
         'Mature': Colors.orange,

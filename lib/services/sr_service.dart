@@ -4,7 +4,7 @@ import '../models/spaced_word_pair.dart';
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/spaced_word_pair.dart';
+// removed duplicate import
 import '../algorithms/sr_algorithms.dart';
 
 
@@ -80,6 +80,7 @@ class SpacedRepetitionService {
   static const String _statsKey = 'sr_stats';
 
   late SpacedRepetitionAlgorithm _algorithm;
+  List<SpacedWordPair> _cards = [];
   List<SpacedWordPair> get cards => _cards;
   StudySession? _currentSession;
 
@@ -106,26 +107,26 @@ class SpacedRepetitionService {
   }
 
   Future<void> updateCard(SpacedWordPair card) async {
-    final index = _cards.indexWhere((c) => c.word == card.word && c.synonym == card.synonym);
+    final index = cards.indexWhere((c) => c.word == card.word && c.synonym == card.synonym);
     if (index != -1) {
-      _cards[index] = card;
+      cards[index] = card;
       await _saveCards();
     }
   }
 
   // Get cards by status
   List<SpacedWordPair> getDueCards() {
-    return _cards.where((card) => card.isDue()).toList()
+    return cards.where((card) => card.isDue()).toList()
       ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
   }
 
   List<SpacedWordPair> getNewCards() {
-    return _cards.where((card) => card.state == CardState.new_card).toList();
+    return cards.where((card) => card.state == CardState.new_card).toList();
   }
 
   List<SpacedWordPair> getFailedCards() {
     final oneWeekAgo = DateTime.now().subtract(Duration(days: 7));
-    return _cards.where((card) =>
+    return cards.where((card) =>
     card.history.isNotEmpty &&
         card.history.last.reviewDate.isAfter(oneWeekAgo) &&
         card.history.last.grade == ReviewGrade.again
@@ -133,7 +134,7 @@ class SpacedRepetitionService {
   }
 
   List<SpacedWordPair> getMatureCards() {
-    return _cards.where((card) =>
+    return cards.where((card) =>
     card.state == CardState.review && card.intervalDays >= 21
     ).toList();
   }
@@ -208,20 +209,20 @@ class SpacedRepetitionService {
   // Statistics
   StudyStats getOverallStats() {
     final now = DateTime.now();
-    final total = _cards.length;
-    final newCards = _cards.where((c) => c.state == CardState.new_card).length;
-    final learning = _cards.where((c) => c.state == CardState.learning).length;
-    final review = _cards.where((c) => c.state == CardState.review).length;
-    final suspended = _cards.where((c) => c.state == CardState.suspended).length;
+    final total = cards.length;
+    final newCards = cards.where((c) => c.state == CardState.new_card).length;
+    final learning = cards.where((c) => c.state == CardState.learning).length;
+    final review = cards.where((c) => c.state == CardState.review).length;
+    final suspended = cards.where((c) => c.state == CardState.suspended).length;
 
-    final dueToday = _cards.where((c) =>
+    final dueToday = cards.where((c) =>
     c.isDue() && c.dueDate.isBefore(now.add(Duration(days: 1)))
     ).length;
 
-    final overdue = _cards.where((c) => c.getDaysOverdue() > 0).length;
+    final overdue = cards.where((c) => c.getDaysOverdue() > 0).length;
 
     // Calculate retention rates
-    final recentReviews = _cards
+    final recentReviews = cards
         .expand((c) => c.history)
         .where((h) => h.reviewDate.isAfter(now.subtract(Duration(days: 30))))
         .toList();
@@ -239,7 +240,7 @@ class SpacedRepetitionService {
       overdueCards: overdue,
       retention: retention,
       averageInterval: review > 0 ?
-      _cards.where((c) => c.state == CardState.review)
+      cards.where((c) => c.state == CardState.review)
           .map((c) => c.intervalDays)
           .reduce((a, b) => a + b) / review : 0.0,
     );
@@ -247,7 +248,7 @@ class SpacedRepetitionService {
 
   List<RetentionPoint> getRetentionCurve(int days) {
     final points = <RetentionPoint>[];
-    final reviewCards = _cards.where((c) => c.state == CardState.review).toList();
+    final reviewCards = cards.where((c) => c.state == CardState.review).toList();
 
     if (reviewCards.isEmpty) return points;
 
@@ -391,27 +392,4 @@ class RetentionPoint {
   final double retention;
 
   RetentionPoint({required this.days, required this.retention});
-}
-class StudyStats {
-  final int totalCards;
-  final int newCards;
-  final int learningCards;
-  final int reviewCards;
-  final int suspendedCards;
-  final int dueToday;
-  final int overdueCards;
-  final double retention;
-  final double averageInterval;
-
-  StudyStats({
-    required this.totalCards,
-    required this.newCards,
-    required this.learningCards,
-    required this.reviewCards,
-    required this.suspendedCards,
-    required this.dueToday,
-    required this.overdueCards,
-    required this.retention,
-    required this.averageInterval,
-  });
 }

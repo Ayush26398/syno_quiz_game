@@ -105,7 +105,7 @@ class EnhancedQuizState extends ChangeNotifier {
 
   Future<void> startClassicQuiz(int numberOfQuestions) async {
     _mode = QuizMode.classic;
-    final allCards = _srService._cards;
+    final allCards = _srService.cards;
     if (allCards.isEmpty) return;
 
     _currentQuiz = List.from(allCards)..shuffle();
@@ -176,10 +176,39 @@ class EnhancedQuizState extends ChangeNotifier {
       await _srService.reviewCard(currentWord!, grade, responseTime);
     }
 
-    notifyListeners();
-  }
+         notifyListeners();
+   }
 
-  // Navigate to next question
+   // Manual grade update for failed cards
+   Future<void> updateCardGrade(ReviewGrade grade) async {
+     if (currentWord == null) return;
+     
+     final responseTime = _questionStartTime != null ?
+         DateTime.now().difference(_questionStartTime!).inMilliseconds : 0;
+     
+     // Update card with the selected grade
+     await _srService.reviewCard(currentWord!, grade, responseTime);
+     
+     // Update status message based on grade
+     switch (grade) {
+       case ReviewGrade.again:
+         _statusMessage = '❌ Marked as Again - Will review soon';
+         break;
+       case ReviewGrade.hard:
+         _statusMessage = '🟠 Marked as Hard - Will review later';
+         break;
+       case ReviewGrade.good:
+         _statusMessage = '🔵 Marked as Good - Will review in a few days';
+         break;
+       case ReviewGrade.easy:
+         _statusMessage = '🟢 Marked as Easy - Will review much later';
+         break;
+     }
+     
+     notifyListeners();
+   }
+ 
+   // Navigate to next question
   void nextQuestion() {
     if (_currentIndex + 1 >= _currentQuiz.length) {
       _completeSession();
@@ -312,7 +341,7 @@ class EnhancedQuizState extends ChangeNotifier {
   // Advanced analytics
   Map<String, dynamic> getDetailedAnalytics() {
     final stats = _srService.getOverallStats();
-    final cards = _srService._cards;
+    final cards = _srService.cards;
 
     // Calculate difficulty distribution
     final difficultyBuckets = <String, int>{};
@@ -350,7 +379,7 @@ class EnhancedQuizState extends ChangeNotifier {
   }
 
   int _calculateStudyStreak() {
-    final cards = _srService._cards;
+    final cards = _srService.cards;
     int streak = 0;
     final today = DateTime.now();
 
@@ -378,7 +407,7 @@ class EnhancedQuizState extends ChangeNotifier {
 
     for (int i = 0; i < 30; i++) {
       final date = today.add(Duration(days: i));
-      final dueCount = _srService._cards.where((card) =>
+      final dueCount = _srService.cards.where((card) =>
       card.dueDate.year == date.year &&
           card.dueDate.month == date.month &&
           card.dueDate.day == date.day).length;
