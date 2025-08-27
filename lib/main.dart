@@ -6,7 +6,8 @@ import 'screens/quiz_screen.dart';
 import 'screens/add_words_screen.dart';
 import 'screens/wrong_words_screen.dart';
 import 'screens/stats_screen.dart';
-
+import 'models/enhanced_quiz_state.dart';        // 🆕 NEW
+import 'screens/enhanced_home_screen.dart';     // 🆕 NEW
 void main() {
   runApp(const SynoQuizApp());
 }
